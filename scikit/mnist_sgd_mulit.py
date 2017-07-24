@@ -35,4 +35,9 @@ conf_mx = confusion_matrix(y_train, preds)
 print conf_mx
 
 plt.matshow(conf_mx, cmap=plt.cm.gray)
+
+row_sum = conf_mx.sum(axis=1, keepdims=True)
+norm_conf_mx = conf_mx / row_sum
+np.fill_diagonal(norm_conf_mx, 0)
+plt.matshow(norm_conf_mx, cmap=plt.cm.gray)
 plt.show()
