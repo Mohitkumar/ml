@@ -43,7 +43,7 @@ def predict(count_vect,tf_idf_transformer, clf, docs):
 
 if __name__ == '__main__':
     clf, count_vect, tf_idf_transformer = classify_normal()
-    docs_new = ['God is love', 'GPU is fast']
+    docs_new = ['God is love', 'GPU is fast','doctor']
     predict(count_vect,tf_idf_transformer,clf,docs_new)
 
     pipe_clf = classify_pipeline()
