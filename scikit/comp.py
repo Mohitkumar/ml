@@ -1,3 +1,4 @@
+from __future__ import print_function
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier
@@ -38,7 +39,7 @@ def explore_data_hist():
 
 def explore_data_relation():
     train.groupby('click').hist()
-    print train.corr()
+    print(train.corr())
     pd.scatter_matrix(train, alpha=0.3, figsize=(14, 8), diagonal='kde');
     plt.show()
 
@@ -47,22 +48,23 @@ def classify():
     clf = RandomForestClassifier(n_estimators=15)
     clf.fit(X_train, y_train)
     preds = cross_val_predict(clf,X_train, y_train, cv=3)
-    print confusion_matrix(y_train, preds)
-    print roc_auc_score(y_train, preds)
+    print(confusion_matrix(y_train, preds))
+    print(roc_auc_score(y_train, preds))
     return clf
 
 
 def predict(clf):
-    print '#####################'
+    print('#####################')
     predicted = clf.predict(X_test)
-    print confusion_matrix(y_true=y_test, y_pred=predicted)
-    print metrics.classification_report(y_test, predicted)
-    print roc_auc_score(y_test,predicted)
+    print(confusion_matrix(y_true=y_test, y_pred=predicted))
+    print(metrics.classification_report(y_test, predicted))
+    print(roc_auc_score(y_test,predicted))
+
 
 
 if __name__ == '__main__':
     clf = classify()
-    predict(clf)
+    #predict(clf)
     joblib.dump(clf, 'comp.pkl')
     #explore_data_hist()
     #explore_data_relation()
