@@ -59,6 +59,8 @@ def classify():
               n_estimators=300, presort='auto', random_state=None,
               subsample=1.0, verbose=True, warm_start=False)
 
+    #clf = Pipeline([('featue_select', SelectKBest(chi2, k=6)), ('classification', clf)])
+
     clf.fit(X_train, y_train)
     print(clf.feature_importances_)
     preds = cross_val_predict(clf,X_train, y_train, cv=3)
@@ -78,4 +80,4 @@ def predict(clf):
 if __name__ == '__main__':
     clf = classify()
     predict(clf)
-    #joblib.dump(clf, 'comp_ada.pkl')
+    #joblib.dump(clf, 'comp_gb_hash.pkl')
