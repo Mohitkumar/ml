@@ -24,21 +24,6 @@ df1 = train.drop(train[train.click == 0].index)
 df2 = train.drop(train[train.click == 1].index)
 train = df1.append(df2.iloc[0:len(df1.index)])
 
-site_offer_count = train.groupby(['siteid','offerid']).size().reset_index()
-site_offer_count.columns = ['siteid','offerid','site_offer_count']
-
-site_cat_count = train.groupby(['siteid','category']).size().reset_index()
-site_cat_count.columns = ['siteid','category','site_cat_count']
-
-site_mcht_count = train.groupby(['siteid','merchant']).size().reset_index()
-site_mcht_count.columns = ['siteid','merchant','site_mcht_count']
-
-agg_df = [site_offer_count,site_cat_count,site_mcht_count]
-
-for x in agg_df:
-    train = train.merge(x)
-
-print(train.describe())
 cols = ['siteid','merchant','offerid','category','countrycode','browserid','devid']
 
 for col in cols:

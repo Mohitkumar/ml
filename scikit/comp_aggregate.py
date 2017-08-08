@@ -1,6 +1,6 @@
 from __future__ import print_function
 import pandas as pd
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import cross_val_score, cross_val_predict,train_test_split, GridSearchCV
 from sklearn.metrics import confusion_matrix, roc_auc_score
@@ -24,6 +24,20 @@ df1 = train.drop(train[train.click == 0].index)
 df2 = train.drop(train[train.click == 1].index)
 train = df1.append(df2.iloc[0:len(df1.index)])
 
+site_offer_count = train.groupby(['siteid','offerid']).size().reset_index()
+site_offer_count.columns = ['siteid','offerid','site_offer_count']
+
+site_cat_count = train.groupby(['siteid','category']).size().reset_index()
+site_cat_count.columns = ['siteid','category','site_cat_count']
+
+site_mcht_count = train.groupby(['siteid','merchant']).size().reset_index()
+site_mcht_count.columns = ['siteid','merchant','site_mcht_count']
+
+agg_df = [site_offer_count,site_cat_count,site_mcht_count]
+
+for x in agg_df:
+    train = train.merge(x)
+
 cols = ['siteid','merchant','offerid','category','countrycode','browserid','devid']
 
 for col in cols:
@@ -34,20 +48,19 @@ for col in cols:
 
 cols_to_use = list(set(train.columns) - set(['ID','datetime','click']))
 
-train = train.sample(frac=1).reset_index(drop=True)
+scaler = StandardScaler().fit(train[cols_to_use])
 
-print(train.groupby('click').count())
-X_train, X_test, y_train, y_test = train_test_split(train[cols_to_use], train['click'], test_size=0.2)
+strain = scaler.transform(train[cols_to_use])
+
+#strain = strain.sample(frac=1).reset_index(drop=True)
+
+X_train, X_test, y_train, y_test = train_test_split(strain, train['click'], test_size=0.2)
 
 
 def classify():
-    clf = GradientBoostingClassifier(criterion='friedman_mse', init=None,
-                                     learning_rate=0.05, loss='deviance', max_depth=6,
-                                     max_features=None, max_leaf_nodes=None,
-                                     min_impurity_split=1e-07, min_samples_leaf=500,
-                                     min_samples_split=4, min_weight_fraction_leaf=0.0,
-                                     n_estimators=300, presort='auto', random_state=None,
-                                     subsample=1.0, verbose=True, warm_start=False)
+    clf = GradientBoostingClassifier(
+              learning_rate=0.03,max_features=3,
+              n_estimators=300,verbose=True)
 
     clf.fit(X_train, y_train)
     preds = cross_val_predict(clf,X_train, y_train, cv=3)
@@ -67,4 +80,4 @@ def predict(clf):
 if __name__ == '__main__':
     clf = classify()
     predict(clf)
-    joblib.dump(clf, 'comp_gbc.pkl')
+    joblib.dump(clf, 'comp_agg.pkl')
