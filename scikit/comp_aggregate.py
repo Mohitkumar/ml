@@ -20,9 +20,7 @@ train['devid'].fillna("None", inplace=True)
 train['datetime'] = pd.to_datetime(train['datetime'])
 train['tweekday'] = train['datetime'].dt.weekday
 train['thour'] = train['datetime'].dt.hour
-df1 = train.drop(train[train.click == 0].index)
-df2 = train.drop(train[train.click == 1].index)
-train = df1.append(df2.iloc[0:len(df1.index)])
+
 
 site_offer_count = train.groupby(['siteid','offerid']).size().reset_index()
 site_offer_count.columns = ['siteid','offerid','site_offer_count']

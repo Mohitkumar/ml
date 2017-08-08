@@ -5,7 +5,7 @@ from sklearn.externals import joblib
 
 
 def load_and_predict():
-    f = open("out_gbc_new.csv",'a')
+    f = open("out_agg.csv",'a')
     test = pd.read_csv('/home/mohit/comp_data/test.csv')
     test['siteid'].fillna(-999, inplace=True)
     test['browserid'].fillna("None", inplace=True)
@@ -25,7 +25,7 @@ def load_and_predict():
     agg_df = [site_offer_count, site_cat_count, site_mcht_count]
 
     for x in agg_df:
-        train = train.merge(x)
+        test = test.merge(x)
 
     cols = ['siteid', 'offerid', 'category', 'merchant', 'countrycode', 'browserid', 'devid']
     for col in cols:
@@ -38,11 +38,11 @@ def load_and_predict():
 
     stest = scaler.transform(test[cols_to_use])
 
-    clf = joblib.load('comp_gbc.pkl')
+    clf = joblib.load('comp_agg.pkl')
     test_data = stest
     print("started predicting")
     print("ID,click", file=f, end='\n')
-    for i,d in zip(test['ID'],test_data.values):
+    for i,d in zip(test['ID'],test_data):
         print(i,",",clf.predict_proba(d.reshape(1,-1))[0,-1], file=f, end='\n')
 
 
