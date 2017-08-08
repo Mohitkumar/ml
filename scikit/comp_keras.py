@@ -47,7 +47,7 @@ for c in list(train.select_dtypes(include=['object']).columns):
         lbl.fit(list(train[c].values))
         train[c] = lbl.transform(list(train[c].values))
 
-train = train.sample(1e6)
+train = train.sample(int(1e6))
 print (train.shape)
 
 cols_to_use = [x for x in train.columns if x not in list(['ID','datetime','click'])]

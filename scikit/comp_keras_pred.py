@@ -51,7 +51,6 @@ for c in list(test.select_dtypes(include=['object']).columns):
         lbl.fit(list(test[c].values))
         test[c] = lbl.transform(list(test[c].values))
 
-test = test.sample(1e6)
 print (test.shape)
 
 cols_to_use = [x for x in test.columns if x not in list(['ID','datetime','click'])]
@@ -60,3 +59,8 @@ scaler = StandardScaler().fit(test[cols_to_use])
 stest = scaler.transform(test[cols_to_use])
 
 model =keras_model(stest.shape[1])
+model.load_weights('first_try.h5')
+print "started predicting"
+test_preds = model.predict_proba(stest)[:,1]
+submit = pd.DataFrame({'ID':test.ID, 'click':test_preds})
+submit.to_csv('keras_starter.csv', index=False)
