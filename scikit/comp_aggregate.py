@@ -11,7 +11,7 @@ from sklearn.svm import LinearSVC
 from sklearn.feature_selection import SelectFromModel
 from sklearn.externals import joblib
 
-train = pd.read_csv('/home/mohit/comp_data/train2.csv')
+train = pd.read_csv('/home/mohit/comp_data/train.csv')
 
 
 train['siteid'].fillna(-999, inplace=True)
@@ -24,21 +24,6 @@ df1 = train.drop(train[train.click == 0].index)
 df2 = train.drop(train[train.click == 1].index)
 train = df1.append(df2.iloc[0:len(df1.index)])
 
-site_offer_count = train.groupby(['siteid','offerid']).size().reset_index()
-site_offer_count.columns = ['siteid','offerid','site_offer_count']
-
-site_cat_count = train.groupby(['siteid','category']).size().reset_index()
-site_cat_count.columns = ['siteid','category','site_cat_count']
-
-site_mcht_count = train.groupby(['siteid','merchant']).size().reset_index()
-site_mcht_count.columns = ['siteid','merchant','site_mcht_count']
-
-agg_df = [site_offer_count,site_cat_count,site_mcht_count]
-
-for x in agg_df:
-    train = train.merge(x)
-
-print(train.describe())
 cols = ['siteid','merchant','offerid','category','countrycode','browserid','devid']
 
 for col in cols:
@@ -56,9 +41,13 @@ X_train, X_test, y_train, y_test = train_test_split(train[cols_to_use], train['c
 
 
 def classify():
-    clf =  GradientBoostingClassifier(
-              learning_rate=0.03,max_features=3,
-              n_estimators=300,verbose=True)
+    clf = GradientBoostingClassifier(criterion='friedman_mse', init=None,
+                                     learning_rate=0.05, loss='deviance', max_depth=6,
+                                     max_features=None, max_leaf_nodes=None,
+                                     min_impurity_split=1e-07, min_samples_leaf=500,
+                                     min_samples_split=4, min_weight_fraction_leaf=0.0,
+                                     n_estimators=300, presort='auto', random_state=None,
+                                     subsample=1.0, verbose=True, warm_start=False)
 
     clf.fit(X_train, y_train)
     preds = cross_val_predict(clf,X_train, y_train, cv=3)

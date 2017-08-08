@@ -5,7 +5,7 @@ from sklearn.externals import joblib
 
 
 def load_and_predict():
-    f = open("out_gb.csv",'a')
+    f = open("out_gbc_new.csv",'a')
     test = pd.read_csv('/home/mohit/comp_data/test.csv')
     test['siteid'].fillna(-999, inplace=True)
     test['browserid'].fillna("None", inplace=True)
@@ -13,14 +13,14 @@ def load_and_predict():
     test['datetime'] = pd.to_datetime(test['datetime'])
     test['tweekday'] = test['datetime'].dt.weekday
     test['thour'] = test['datetime'].dt.hour
-    test['tminute'] = test['datetime'].dt.minute
+    #test['tminute'] = test['datetime'].dt.minute
     cols = ['siteid', 'offerid', 'category', 'merchant', 'countrycode', 'browserid', 'devid']
     for col in cols:
         lbl = LabelEncoder()
         lbl.fit(list(test[col].values))
         test[col] = lbl.transform(list(test[col].values))
     cols_to_use = list(set(test.columns) - set(['ID', 'datetime', 'click']))
-    clf = joblib.load('model_gb/comp_gbc.pkl')
+    clf = joblib.load('comp_gbc.pkl')
     test_data = test[cols_to_use]
     print("started predicting")
     print("ID,click", file=f, end='\n')
