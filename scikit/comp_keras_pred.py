@@ -14,7 +14,8 @@ from sklearn.preprocessing import StandardScaler, LabelEncoder
 def keras_model(input_dim):
     model = Sequential()
     model.add(Dense(100, activation='relu', input_shape=(input_dim,)))  # layer 1
-    model.add(Dense(30, activation='relu'))  # layer 2
+    model.add(Dense(30, activation='relu'))
+    model.add(Dense(15, activation='relu'))  # layer 2
     model.add(Dense(2, activation='sigmoid'))  # output
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model

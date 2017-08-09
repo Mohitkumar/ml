@@ -47,7 +47,7 @@ for c in list(train.select_dtypes(include=['object']).columns):
         lbl.fit(list(train[c].values))
         train[c] = lbl.transform(list(train[c].values))
 
-train = train.sample(int(1e6))
+#train = train.sample(int(1e6))
 print (train.shape)
 
 cols_to_use = [x for x in train.columns if x not in list(['ID','datetime','click'])]
@@ -66,7 +66,8 @@ print (Y_valid.shape)
 def keras_model(input_dim):
     model = Sequential()
     model.add(Dense(100, activation='relu', input_shape=(input_dim,)))  # layer 1
-    model.add(Dense(30, activation='relu'))  # layer 2
+    model.add(Dense(30, activation='relu'))
+    model.add(Dense(15, activation='relu'))  # layer 2
     model.add(Dense(2, activation='sigmoid'))  # output
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     return model
