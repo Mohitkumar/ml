@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, roc_auc_score
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 def get_data(csv_file):
     train = pd.read_csv(csv_file)
@@ -29,6 +29,7 @@ def get_data(csv_file):
 if __name__ == '__main__':
     X_train, X_valid, Y_train, Y_valid = get_data('/home/mohit/comp_data/train2.csv')
     Y_train.shape += (1,)
+    Y_valid.shape += (1,)
     n, p = X_train.shape
     k = 5
     X = tf.placeholder('float', shape=[n, p])
@@ -57,9 +58,11 @@ if __name__ == '__main__':
     loss = tf.add(error, l2_norm)
     eta = tf.constant(0.01)
     optimizer = tf.train.AdagradOptimizer(eta).minimize(loss)
-    N_EPOCHS = 100
+    N_EPOCHS = 100000
     # Launch the graph.
+    saver = tf.train.Saver()
     init = tf.global_variables_initializer()
+    msg = "Epoch {0} --- Validation Loss: {3:.3f}"
     with tf.Session() as sess:
         sess.run(init)
         for epoch in range(N_EPOCHS):
@@ -70,4 +73,5 @@ if __name__ == '__main__':
 
         print('MSE: ', sess.run(error, feed_dict={X: x_data, y: y_data}))
         print('Loss (regularized error):', sess.run(loss, feed_dict={X: x_data, y: y_data}))
-        print('Predictions:', sess.run(y_hat, feed_dict={X: x_data, y: y_data}))
+        print('Predictions:', sess.run(y_hat, feed_dict={X: x_data}))
+        saver.save(sess, 'fm_comp')
