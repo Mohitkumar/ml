@@ -4,6 +4,7 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, roc_auc_score
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.feature_extraction import DictVectorizer as DV
 
 def get_data(csv_file):
     train = pd.read_csv(csv_file)
@@ -21,10 +22,34 @@ def get_data(csv_file):
         lbl = LabelEncoder()
         lbl.fit(list(train[col].values))
         train[col] = lbl.transform(list(train[col].values))
-    cols_to_use = list(set(train.columns) - set(['ID', 'datetime', 'click']))
-
-    X_train, X_valid, Y_train, Y_valid = train_test_split(train[cols_to_use], train['click'], test_size=0.5, random_state=2017)
+    cols_to_use = list(set(train.columns) - set(['ID', 'datetime', 'click','siteid']))
+    print train[cols_to_use].head()
+    X_train, X_valid, Y_train, Y_valid = train_test_split(train[cols_to_use], train['click'], test_size=0.2, random_state=2017)
     return np.array(X_train), np.array(X_valid), np.array(Y_train), np.array(Y_valid)
+
+
+def get_data_vect(csv_file):
+    train = pd.read_csv(csv_file)
+    train['siteid'].fillna(-999, inplace=True)
+    train['browserid'].fillna("None", inplace=True)
+    train['devid'].fillna("None", inplace=True)
+    train['datetime'] = pd.to_datetime(train['datetime'])
+    train['tweekday'] = train['datetime'].dt.weekday
+    train['thour'] = train['datetime'].dt.hour
+    train['tminute'] = train['datetime'].dt.minute
+    y_train = train['click']
+    num_train = train.drop(
+        ['ID', 'datetime', 'click', 'siteid', 'offerid', 'category', 'merchant', 'countrycode', 'browserid', 'devid'],
+        axis=1)
+    cat_train = train.drop(['ID', 'datetime', 'click', 'tweekday', 'thour', 'tminute'], axis=1)
+    cat_train['siteid'] = cat_train['siteid'].astype(int)
+
+    x_cat_train = cat_train.to_dict(orient='records')
+    vectorizer = DV(sparse=False, dtype=np.int32)
+    vec_x_cat_train = vectorizer.fit_transform(x_cat_train)
+    train = np.hstack((num_train, vec_x_cat_train))
+    X_train, X_test, y_train, y_test = train_test_split(train, y_train, test_size=0.2)
+    return np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
 if __name__ == '__main__':
     X_train, X_valid, Y_train, Y_valid = get_data('/home/mohit/comp_data/train2.csv')

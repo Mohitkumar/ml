@@ -9,22 +9,19 @@ from tffm import TFFMClassifier
 from fm import model
 
 X_train, X_valid, Y_train, Y_valid = model.get_data('/home/mohit/comp_data/train2.csv')
-def keras_model():
-    model = TFFMClassifier(
-        order=2,
-        rank=2,
-        optimizer=tf.train.AdadeltaOptimizer(learning_rate=0.01),
-        n_epochs=100,
-        batch_size=10,
-        init_std=0.001,
-        input_type='dense')
-    return model
 
-model = keras_model()
+model = TFFMClassifier(
+    order=2,
+    rank=2,
+    optimizer=tf.train.AdadeltaOptimizer(learning_rate=0.01),
+    n_epochs=100,
+    batch_size=10,
+    init_std=0.001,
+    input_type='dense')
 
 model.fit(X_train, Y_train, show_progress=True)
 
-#vpreds = model.predict(X_valid)
-#print roc_auc_score(y_true = Y_valid[:,1], y_score=vpreds)
-
+pres = model.predict(X_valid)
+print roc_auc_score(y_true=Y_valid, y_score=pres)
+model.save_state('comp.tf')
 model.destroy()
