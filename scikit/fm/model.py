@@ -71,15 +71,18 @@ def get_data_vect(csv_file):
 
 if __name__ == '__main__':
     X_train, X_valid, Y_train, Y_valid = get_data('/home/mohit/comp_data/train2.csv')
-    Y_train.shape += (1,)
-    Y_valid.shape += (1,)
+    Y_train = np.eye(2)[Y_train]
+
+    print Y_train.shape
     n, p = X_train.shape
     k = 5
-    X = tf.placeholder('float', shape=[n, p])
-    y = tf.placeholder('float', shape=[n, 1])
+    X = tf.placeholder('float', shape=[None, p])
+    y = tf.placeholder('float', shape=[None, 2])
+    y_true_cls = tf.argmax(y, dimension=1)
 
-    w0 = tf.Variable(tf.zeros([1]))
+    w0 = tf.Variable(tf.zeros([2]))
     W = tf.Variable(tf.zeros([p]))
+
     V = tf.Variable(tf.random_normal([k, p], stddev=0.01))
     linear_terms = tf.add(w0, tf.reduce_sum(tf.multiply(W, X), 1, keep_dims=True))
     interactions = (tf.multiply(0.5,
@@ -89,6 +92,7 @@ if __name__ == '__main__':
                                         tf.matmul(tf.pow(X, 2), tf.transpose(tf.pow(V, 2)))),
                                     1, keep_dims=True)))
     y_hat = tf.add(linear_terms, interactions)
+    #y_hat = tf.nn.sigmoid(y_hat)
     lambda_w = tf.constant(0.001, name='lambda_w')
     lambda_v = tf.constant(0.001, name='lambda_v')
 
@@ -97,11 +101,18 @@ if __name__ == '__main__':
             tf.multiply(lambda_w, tf.pow(W, 2)),
             tf.multiply(lambda_v, tf.pow(V, 2)))))
 
-    error = tf.reduce_mean(tf.square(tf.subtract(y, y_hat)))
+    error = tf.nn.softmax_cross_entropy_with_logits(logits=y_hat,labels=y)
+
+    y_pred = tf.nn.softmax(y_hat)
+    y_pred_cls = tf.argmax(y_hat, dimension=1)
+    correct_prediction = tf.equal(y_pred_cls, y_true_cls)
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
     loss = tf.add(error, l2_norm)
+    cost = tf.reduce_mean(loss)
     eta = tf.constant(0.01)
-    optimizer = tf.train.AdagradOptimizer(eta).minimize(loss)
-    N_EPOCHS = 100000
+    optimizer = tf.train.AdagradOptimizer(eta).minimize(cost)
+    N_EPOCHS = 100
     # Launch the graph.
     saver = tf.train.Saver()
     init = tf.global_variables_initializer()
@@ -114,7 +125,7 @@ if __name__ == '__main__':
             x_data, y_data = X_train[indices], Y_train[indices]
             sess.run(optimizer, feed_dict={X: x_data, y: y_data})
 
-        print('MSE: ', sess.run(error, feed_dict={X: x_data, y: y_data}))
-        print('Loss (regularized error):', sess.run(loss, feed_dict={X: x_data, y: y_data}))
-        print('Predictions:', sess.run(y_hat, feed_dict={X: x_data}))
-        saver.save(sess, 'fm_comp')
+        print('Loss: ', sess.run(cost, feed_dict={X: x_data, y: y_data}))
+        print('accuracy:', sess.run(accuracy, feed_dict={X: x_data, y: y_data}))
+        print('Predictions:', sess.run(y_pred_cls, feed_dict={X: x_data}))
+        #saver.save(sess, 'fm_comp')

@@ -10,9 +10,9 @@ def train():
         order=4,
         rank=2,
         optimizer=tf.train.AdadeltaOptimizer(learning_rate=0.01),
-        n_epochs=100,
+        n_epochs=1000,
         batch_size=1000,
-        init_std=0.0000001,
+        init_std=0.0000000001,
         input_type='dense')
     print "started training"
     model.fit(X_train, Y_train, show_progress=True)
