@@ -69,11 +69,19 @@ def get_data_vect(csv_file):
     X_train, X_test, y_train, y_test = train_test_split(train, y_train, test_size=0.2)
     return np.array(X_train), np.array(X_test), np.array(y_train), np.array(y_test)
 
+
+def print_progress(session, epoch, feed_dict_train, feed_dict_validate, val_loss):
+    acc = session.run(accuracy, feed_dict=feed_dict_train)
+    val_acc = session.run(accuracy, feed_dict=feed_dict_validate)
+    msg = "Epoch {0} --- Training Accuracy: {1:>6.1%}, Validation Accuracy: {2:>6.1%}, Validation Loss: {3:.3f}"
+    print(msg.format(epoch + 1, acc, val_acc, val_loss))
+
+
 if __name__ == '__main__':
     X_train, X_valid, Y_train, Y_valid = get_data('/home/mohit/comp_data/train2.csv')
     Y_train = np.eye(2)[Y_train]
+    Y_valid = np.eye(2)[Y_valid]
 
-    print Y_train.shape
     n, p = X_train.shape
     k = 5
     X = tf.placeholder('float', shape=[None, p])
@@ -110,7 +118,7 @@ if __name__ == '__main__':
 
     loss = tf.add(error, l2_norm)
     cost = tf.reduce_mean(loss)
-    eta = tf.constant(0.01)
+    eta = tf.constant(0.001)
     optimizer = tf.train.AdagradOptimizer(eta).minimize(cost)
     N_EPOCHS = 100
     # Launch the graph.
@@ -123,7 +131,14 @@ if __name__ == '__main__':
             indices = np.arange(n)
             np.random.shuffle(indices)
             x_data, y_data = X_train[indices], Y_train[indices]
-            sess.run(optimizer, feed_dict={X: x_data, y: y_data})
+            print(x_data)
+            feed_dict_train = {X: x_data,
+                               y: y_data}
+            feed_dict_validate = {X: X_valid,
+                                  y: Y_valid}
+            sess.run(optimizer, feed_dict=feed_dict_train)
+            val_loss = sess.run(cost, feed_dict=feed_dict_validate)
+            print_progress(sess,epoch,feed_dict_train,feed_dict_validate, val_loss)
 
         print('Loss: ', sess.run(cost, feed_dict={X: x_data, y: y_data}))
         print('accuracy:', sess.run(accuracy, feed_dict={X: x_data, y: y_data}))
