@@ -29,7 +29,7 @@ def predict_test():
         order=4,
         rank=2,
         optimizer=tf.train.AdadeltaOptimizer(learning_rate=0.01),
-        n_epochs=100,
+        n_epochs=1000,
         batch_size=1000,
         init_std=0.0000001,
         input_type='dense')
@@ -37,9 +37,11 @@ def predict_test():
     model.load_state('fm/comp.tf')
     print "start prediciting"
     cols_to_use = list(set(test.columns) - set(['ID', 'datetime', 'click']))
-    preds = model.predict(test[cols_to_use])
-    submit = pd.DataFrame({'ID': test.ID, 'click': preds})
+    preds = model.predict_proba(test[cols_to_use])
+    print preds.shape
+    print preds[0:3,]
+    submit = pd.DataFrame({'ID': test.ID, 'click': preds[:,-1]})
     submit.to_csv('fm/pred.csv', index=False)
 
 if __name__ == '__main__':
-    predict_test()
+    train()
