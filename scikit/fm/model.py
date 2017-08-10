@@ -79,17 +79,20 @@ def print_progress(session, epoch, feed_dict_train, feed_dict_validate, val_loss
 
 if __name__ == '__main__':
     X_train, X_valid, Y_train, Y_valid = get_data('/home/mohit/comp_data/train2.csv')
+    Y_valid_orig = Y_valid.copy()
+    Y_train = Y_train.reshape(-1)
+    Y_valid = Y_valid.reshape(-1)
+
     Y_train = np.eye(2)[Y_train]
     Y_valid = np.eye(2)[Y_valid]
-
     n, p = X_train.shape
     k = 5
     X = tf.placeholder('float', shape=[None, p])
     y = tf.placeholder('float', shape=[None, 2])
     y_true_cls = tf.argmax(y, dimension=1)
 
-    w0 = tf.Variable(tf.zeros([2]))
-    W = tf.Variable(tf.zeros([p]))
+    w0 = tf.Variable(tf.random_normal((1,2), stddev=0.1))
+    W = tf.Variable(tf.random_normal((1,p), stddev=0.1))
 
     V = tf.Variable(tf.random_normal([k, p], stddev=0.01))
     linear_terms = tf.add(w0, tf.reduce_sum(tf.multiply(W, X), 1, keep_dims=True))
@@ -120,7 +123,7 @@ if __name__ == '__main__':
     cost = tf.reduce_mean(loss)
     eta = tf.constant(0.001)
     optimizer = tf.train.AdagradOptimizer(eta).minimize(cost)
-    N_EPOCHS = 100
+    N_EPOCHS = 10000
     # Launch the graph.
     saver = tf.train.Saver()
     init = tf.global_variables_initializer()
@@ -131,7 +134,6 @@ if __name__ == '__main__':
             indices = np.arange(n)
             np.random.shuffle(indices)
             x_data, y_data = X_train[indices], Y_train[indices]
-            print(x_data)
             feed_dict_train = {X: x_data,
                                y: y_data}
             feed_dict_validate = {X: X_valid,
@@ -142,5 +144,11 @@ if __name__ == '__main__':
 
         print('Loss: ', sess.run(cost, feed_dict={X: x_data, y: y_data}))
         print('accuracy:', sess.run(accuracy, feed_dict={X: x_data, y: y_data}))
-        print('Predictions:', sess.run(y_pred_cls, feed_dict={X: x_data}))
+        preds = sess.run(y_pred_cls, feed_dict={X: X_valid})
+        preds_prob = sess.run(tf.nn.softmax(y_hat), feed_dict={X: X_valid})
+        print('Predictions:', preds)
+        print('probs:', preds_prob)
+        print np.count_nonzero(preds == 0)
+        print confusion_matrix(Y_valid_orig, preds)
+        print roc_auc_score(Y_valid_orig,preds)
         #saver.save(sess, 'fm_comp')
