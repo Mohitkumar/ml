@@ -48,6 +48,7 @@ def get_data(csv_file):
 
 def get_data_out():
     train = pd.read_csv('/home/mohit/comp_data/test.csv')
+    ids = train['ID']
     train['siteid'].fillna(-999, inplace=True)
     train['browserid'].fillna("None", inplace=True)
     train['devid'].fillna("None", inplace=True)
@@ -65,7 +66,7 @@ def get_data_out():
     vectorizer = DV(sparse=False, dtype=np.int32)
     vec_x_cat_train = vectorizer.fit_transform(x_cat_train)
     train = np.hstack((num_train, vec_x_cat_train))
-    return np.array(train[0:5,:])
+    return ids, np.array(train)
 
 
 def get_data_vect(csv_file):

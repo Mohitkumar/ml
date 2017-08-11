@@ -9,6 +9,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn import datasets
 from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
 from model import get_dummy, get_data_vect, get_data_out
+import pandas as pd
 
 def make_embeddings(x, rank, num_features, depth=1, seed=12345):
     """
@@ -122,7 +123,7 @@ def factorize(observed_features,
         #print out_pred
         return predictions, total_costs / observed_features_validation.shape[0], sess.run([norm])
 
-def predict_probab(X_test, rank, seed, depth):
+def predict_probab(ids, X_test, rank, seed, depth):
     num_features = X_test.shape[1]
 
     K = tf.Variable(tf.truncated_normal([rank, rank], stddev=0.2, mean=0, seed=seed), name="metric_matrix")
@@ -147,7 +148,9 @@ def predict_probab(X_test, rank, seed, depth):
         for i in range(X_test.shape[0]):
             p= sess.run(pred, feed_dict={x: X_test[i].reshape(1, num_features),y: 1})
             out_pred.append(round(p,3))
-        print out_pred
+        #print out_pred
+        submit = pd.DataFrame({'ID': ids, 'click': out_pred})
+        submit.to_csv('keras_starter.csv', index=False)
 
 if __name__ == '__main__':
     #X_train, X_valid, Y_train, Y_valid = get_data_vect('/home/mohit/comp_data/train1.csv')
@@ -155,5 +158,5 @@ if __name__ == '__main__':
     #predictions, test_costs, norm = factorize(X_train, Y_train, X_valid, Y_valid, r, verbose=True, lambda_v=0.1,max_iter=300)
     #print("rank: %s, cost: %s, overall AUC: %s, norm: %s") % (
     #r, test_costs, roc_auc_score(Y_valid, predictions, average="weighted"), norm)
-
-    predict_probab(get_data_out(),r,12345,3)
+    ids, X = get_data_out();
+    predict_probab(ids,X,r,12345,3)
