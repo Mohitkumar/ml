@@ -1,14 +1,8 @@
 import numpy as np
 
 import tensorflow as tf
-
-from sklearn.cross_validation import train_test_split
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.feature_extraction import FeatureHasher
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn import datasets
-from sklearn.metrics import roc_auc_score, f1_score, confusion_matrix
-from model import get_dummy, get_data_vect, get_data_out
+from sklearn.metrics import roc_auc_score,confusion_matrix
+from model import get_dummy, get_data_vect, get_data_out, get_data
 import pandas as pd
 
 def make_embeddings(x, rank, num_features, depth=1, seed=12345):
@@ -37,12 +31,11 @@ def factorize(observed_features,
               rank,
               max_iter=100,
               verbose=False,
-              lambda_v=0,
               lambda_k=0,
               lambda_w=0,
               lambda_constants=0,
               epsilon=0.001,
-              optimizer=tf.train.AdamOptimizer(),
+              optimizer=tf.train.AdamOptimizer(learning_rate=0.001),
               depth=3,
               seed=12345):
     # Extract info about shapes etc from the training data
@@ -123,6 +116,7 @@ def factorize(observed_features,
         #print out_pred
         return predictions, total_costs / observed_features_validation.shape[0], sess.run([norm])
 
+
 def predict_probab(ids, X_test, rank, seed, depth):
     num_features = X_test.shape[1]
 
@@ -150,13 +144,16 @@ def predict_probab(ids, X_test, rank, seed, depth):
             out_pred.append(round(p,3))
         #print out_pred
         submit = pd.DataFrame({'ID': ids, 'click': out_pred})
-        submit.to_csv('keras_starter.csv', index=False)
+        submit.to_csv('out.csv', index=False)
 
 if __name__ == '__main__':
-    #X_train, X_valid, Y_train, Y_valid = get_data_vect('/home/mohit/comp_data/train1.csv')
+    X_train, X_valid, Y_train, Y_valid = get_data_vect('/home/mohit/comp_data/train3.csv')
     r = 10
-    #predictions, test_costs, norm = factorize(X_train, Y_train, X_valid, Y_valid, r, verbose=True, lambda_v=0.1,max_iter=300)
-    #print("rank: %s, cost: %s, overall AUC: %s, norm: %s") % (
-    #r, test_costs, roc_auc_score(Y_valid, predictions, average="weighted"), norm)
-    ids, X = get_data_out();
-    predict_probab(ids,X,r,12345,3)
+    print "training started"
+    predictions, test_costs, norm = factorize(X_train, Y_train, X_valid, Y_valid, r, verbose=True, depth=2)
+    print("rank: %s, cost: %s, overall AUC: %s, norm: %s") % (
+    r, test_costs, roc_auc_score(Y_valid, predictions, average="weighted"), norm)
+
+    #print confusion_matrix(Y_valid, predictions)
+    #ids, X = get_data_out();
+    #predict_probab(ids,X,r,12345,2)
