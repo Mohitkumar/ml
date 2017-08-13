@@ -2,7 +2,7 @@ import numpy as np
 
 import tensorflow as tf
 from sklearn.metrics import roc_auc_score,confusion_matrix
-from model import get_dummy, get_data_vect, get_data_out, get_data
+from model import get_dummy, get_data_vect, get_data_out, get_data,get_data_vect_out
 import pandas as pd
 
 def make_embeddings(x, rank, num_features, depth=1, seed=12345):
@@ -34,8 +34,8 @@ def factorize(observed_features,
               lambda_k=0,
               lambda_w=0,
               lambda_constants=0,
-              epsilon=0.001,
-              optimizer=tf.train.AdamOptimizer(learning_rate=0.001),
+              epsilon=0.0001,
+              optimizer=tf.train.GradientDescentOptimizer(learning_rate=0.01),
               depth=3,
               seed=12345):
     # Extract info about shapes etc from the training data
@@ -111,7 +111,7 @@ def factorize(observed_features,
                                                      y: labels_validation[i]})
             predictions.append(p)
             total_costs += c
-        saver.save(sess, 'deep_comp')
+        saver.save(sess, 'model/deep_comp')
         #out_pred = sess.run(pred, feed_dict={x:get_data_out()})
         #print out_pred
         return predictions, total_costs / observed_features_validation.shape[0], sess.run([norm])
@@ -138,7 +138,7 @@ def predict_probab(ids, X_test, rank, seed, depth):
     saver = tf.train.Saver()
     with tf.Session() as sess:
         out_pred = []
-        saver.restore(sess, 'deep_comp')
+        saver.restore(sess, 'model/deep_comp')
         for i in range(X_test.shape[0]):
             p= sess.run(pred, feed_dict={x: X_test[i].reshape(1, num_features),y: 1})
             out_pred.append(round(p,3))
@@ -147,13 +147,13 @@ def predict_probab(ids, X_test, rank, seed, depth):
         submit.to_csv('out.csv', index=False)
 
 if __name__ == '__main__':
-    X_train, X_valid, Y_train, Y_valid = get_data_vect('/home/mohit/comp_data/train3.csv')
-    r = 10
+    X_train, X_valid, Y_train, Y_valid = get_data_vect('/home/mohit/comp_data/train2.csv')
+    r = 15
     print "training started"
-    predictions, test_costs, norm = factorize(X_train, Y_train, X_valid, Y_valid, r, verbose=True, depth=2)
+    predictions, test_costs, norm = factorize(X_train, Y_train, X_valid, Y_valid, r, verbose=True, depth=5)
     print("rank: %s, cost: %s, overall AUC: %s, norm: %s") % (
     r, test_costs, roc_auc_score(Y_valid, predictions, average="weighted"), norm)
 
     #print confusion_matrix(Y_valid, predictions)
-    #ids, X = get_data_out();
-    #predict_probab(ids,X,r,12345,2)
+    #ids, X = get_data_vect_out();
+    #predict_probab(ids,X,r,12345,5)

@@ -60,11 +60,32 @@ def get_data_vect_out():
     train['tweekday'] = train['datetime'].dt.weekday
     train['thour'] = train['datetime'].dt.hour
     train['tminute'] = train['datetime'].dt.minute
+
+    site_offer_count = train.groupby(['siteid', 'offerid']).size().reset_index()
+    site_offer_count.columns = ['siteid', 'offerid', 'site_offer_count']
+
+    site_cat_count = train.groupby(['siteid', 'category']).size().reset_index()
+    site_cat_count.columns = ['siteid', 'category', 'site_cat_count']
+
+    site_mcht_count = train.groupby(['siteid', 'merchant']).size().reset_index()
+    site_mcht_count.columns = ['siteid', 'merchant', 'site_mcht_count']
+
+    agg_df = [site_offer_count, site_cat_count, site_mcht_count]
+
+    for x in agg_df:
+        train = train.merge(x)
+
     num_train = train.drop(
         ['ID', 'datetime', 'siteid', 'offerid', 'category', 'merchant', 'countrycode', 'browserid', 'devid'],
         axis=1)
-    cat_train = train.drop(['ID', 'datetime','tweekday', 'thour', 'tminute'], axis=1)
+    cat_train = train.drop(
+        ['ID', 'datetime', 'tweekday', 'thour', 'tminute', 'site_offer_count', 'site_cat_count',
+         'site_mcht_count'], axis=1)
+
     cat_train['siteid'] = cat_train['siteid'].astype(int)
+
+    scaler = StandardScaler().fit(num_train)
+    num_train = scaler.transform(num_train)
 
     x_cat_train = cat_train.to_dict(orient='records')
     vectorizer = DV(sparse=False, dtype=np.int32)
@@ -82,12 +103,31 @@ def get_data_vect(csv_file):
     train['tweekday'] = train['datetime'].dt.weekday
     train['thour'] = train['datetime'].dt.hour
     train['tminute'] = train['datetime'].dt.minute
+
+    site_offer_count = train.groupby(['siteid', 'offerid']).size().reset_index()
+    site_offer_count.columns = ['siteid', 'offerid', 'site_offer_count']
+
+    site_cat_count = train.groupby(['siteid', 'category']).size().reset_index()
+    site_cat_count.columns = ['siteid', 'category', 'site_cat_count']
+
+    site_mcht_count = train.groupby(['siteid', 'merchant']).size().reset_index()
+    site_mcht_count.columns = ['siteid', 'merchant', 'site_mcht_count']
+
+    agg_df = [site_offer_count, site_cat_count, site_mcht_count]
+
+    for x in agg_df:
+        train = train.merge(x)
+
     y_train = train['click']
     num_train = train.drop(
         ['ID', 'datetime', 'click', 'siteid', 'offerid', 'category', 'merchant', 'countrycode', 'browserid', 'devid'],
         axis=1)
-    cat_train = train.drop(['ID', 'datetime', 'click', 'tweekday', 'thour', 'tminute'], axis=1)
+
+    cat_train = train.drop(['ID', 'datetime', 'click', 'tweekday', 'thour', 'tminute', 'site_offer_count', 'site_cat_count','site_mcht_count'], axis=1)
     cat_train['siteid'] = cat_train['siteid'].astype(int)
+
+    scaler = StandardScaler().fit(num_train)
+    num_train = scaler.transform(num_train)
 
     x_cat_train = cat_train.to_dict(orient='records')
     vectorizer = DV(sparse=False, dtype=np.int32)
